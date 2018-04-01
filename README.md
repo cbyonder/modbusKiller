@@ -30,6 +30,28 @@ PLC Modicon line ("m340" & "m580") suffer a denial of services upon receiving a 
 
 ***
 
+## tested in:
+	
+	[+] m430
+	BMX P34 2020 v2.0 (TELEMECANIQUE)         
+	BMX P34 2020 v2.1                          
+	BMX P34 2020 v2.2                          
+	...                                        --
+	BMX P34 2020 v2.4                          
+	BMX P34 2020 v2.5                          
+	BMX P34 2020 v2.6                          
+	BMX P34 2020 v2.7                           
+	BMX P34 2020 v2.8                          
+
+	-------------------------------
+	[+] m580
+
+	BME P58 2020 v01.04
+	BME P58 2020 v02.20
+	BME P58 4040 v02.20
+	BME P58 4040 v02.12
+
+
 # TOOL: "Modbus Killer"
 
 ## Quick start
