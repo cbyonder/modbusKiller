@@ -28,15 +28,18 @@ banner = '''
 
 bannerInfo = '''
  # Exploit Title: \t"DOS Modicon via Modbus Injection" 
- # CVE: \t\t2018-???? <-- soon !!!
+ # CVE: \t\tCVE-2017-6017
  # CVSS Base Score v3: \t8.6 / 10
  # CVSS Vector String:\tAV:N/AC:L/PR:N/UI:N/S:C/C:N/I:N/A:H  
  # Date: \t\t2/01/2018
- # Exploit Author: \tFernandez Ezequiel ( @capitan_alfa ) && Bertin Jose ( @bertinjoseb )
+ # Exploit Author: \tFernandez Ezequiel ( @capitan_alfa ) 
  # Vendor: \t\tSchneider Electric
- # Devices vuln(tested):
-			PLC Modicon m340 (v2.0 > v2.8) \t\t ( fix: v2.9 )
- 			PLC Modicon m580 (v01.04 > v02.12) \t ( fix: v??? )
+ # Devices vuln:
+ 			• M340 CPUs with firmware prior to V2.9
+			• M580 CPUs with firmware prior to V2.3
+			• Quantum CPUs with firmware prior to V3.52
+			• Premium CPUs all versions
+			• M1E CPUs all versions
  '''
 
 parser = argparse.ArgumentParser(prog='mdKiller.py',
